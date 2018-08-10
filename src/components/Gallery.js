@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import GalleryItem from './GalleryItem';
-import { PacmanLoader } from 'react-spinners';
+import { BeatLoader } from 'react-spinners';
 
-
-const apiKey = require("../config.js");
+const apiKey = require("../config2.js");
 
 export default class Gallery extends Component {
 
@@ -12,14 +11,16 @@ export default class Gallery extends Component {
     super(props);
 
     let match = props.match;
-
+    let queryParameter = match.params.query; // getting the :query parameter from the Route path
     this.state = {
+      apiKeyNotFound:false,
       images:[],
-      query: match.params.query,
+      query: queryParameter,
       loading: true
     };
   }
 
+  // display if no pictures where found
   renderNotFound(){
     return (
       <ul>
@@ -31,7 +32,19 @@ export default class Gallery extends Component {
     );
   }
 
-  // https://www.flickr.com/services/api/misc.urls.html
+  // display while fetching images from flickr
+  renderLoader(){
+    return (
+      <ul>
+        <li className="not-found">
+          <h1>Loading</h1>
+          <BeatLoader color={'#123abc'} loading={this.state.loading} />
+        </li>
+      </ul>
+    );
+  }
+
+  // displaying images in gallery
   renderGalleryItems(images){
     return (
       <div>
@@ -48,6 +61,7 @@ export default class Gallery extends Component {
     );
   }
 
+  // displaying gallery
   renderGallery(){
     var {images} = this.state;
 
@@ -61,9 +75,28 @@ export default class Gallery extends Component {
     }
   }
 
-  fetchImages(query){
-    this.setState({searchStarted:true});
+  // while the images are being fetched, displays the loader, then the images
+  renderPhotos(){
+    return(
+      (this.state.loading)
+      ? this.renderLoader()
+      : this.renderGallery()
+    )
+  }
 
+  // displays a error message for the api key
+  renderApiKeyNotFound(){
+    return(
+      <ul>
+        <li className="not-found">
+          <h3>API key error</h3>
+          <p>Please check the config file</p>
+        </li>
+      </ul>
+    )
+  }
+
+  fetchImages(query){
     axios.get('https://api.flickr.com/services/rest/', {
       params: {
         method: "flickr.photos.search",
@@ -76,33 +109,42 @@ export default class Gallery extends Component {
       }
     })
     .then(response => {
-      setTimeout(
-        function(){
-          this.setState({
-            images:response.data.photos.photo,
-            loading:false
-          });
-        }.bind(this),
-        1500
-      );
+      var { photo } = response.data.photos;
+
+      if (photo) {
+        // setting a 800ms timeout to have a smoother transition
+        // between the loader and the gallery display
+        setTimeout(
+          function(){
+            this.setState({
+              images:photo,
+              loading:false
+            });
+          }.bind(this),
+          800
+        );
+      }
     })
     .catch(error => {
+      // if
+      this.setState({apiKeyNotFound:true});
       console.log('Error fetching and parsing data', error);
     });
 
   }
 
-componentDidMount() {
-  this.fetchImages(this.state.query);
-}
+  componentDidMount() {
+    this.fetchImages(this.state.query);
+  }
 
   render() {
     return (
       <div className="photo-container">
         {
-          (this.state.loading)
-          ? <div><PacmanLoader  sizeUnit={"px"} size={"150"} color={'#123abc'} loading={this.state.loading} /></div>
-          : this.renderGallery()}
+          (this.state.apiKeyNotFound)
+          ? this.renderApiKeyNotFound()
+          : this.renderPhotos()
+        }
       </div>
     );
   }

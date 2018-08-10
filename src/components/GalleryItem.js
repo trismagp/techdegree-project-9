@@ -4,7 +4,7 @@ class GalleryItem extends Component {
   render() {
     return (
         <li>
-          <img src={this.props.image} alt="" />
+          <img src={this.props.image} />
         </li>
     );
   }

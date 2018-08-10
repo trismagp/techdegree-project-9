@@ -11,10 +11,13 @@ class SearchForm extends Component {
     };
   }
 
+  // before updating the state query, white spaces are replaced by "+"
+  // .split(" ").join("+") works like a replaceAll " " with "+"
   handleInputChange(e) {
-    this.setState({query: e.target.value.replace(" ","+")});
+    this.setState({query: e.target.value.split(" ").join("+")});
   }
 
+  // on form submit redirects to `/search/${this.state.query}`
   handleSubmit(e) {
     e.preventDefault();
     this.props.history.push(`/search/${this.state.query}`);
