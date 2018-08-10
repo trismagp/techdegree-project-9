@@ -3,7 +3,7 @@ import axios from 'axios';
 import GalleryItem from './GalleryItem';
 import { BeatLoader } from 'react-spinners';
 
-const apiKey = require("../config2.js");
+const apiKey = require("../config.js");
 
 export default class Gallery extends Component {
 
