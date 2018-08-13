@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import GalleryItem from './GalleryItem';
+import SearchForm from './SearchForm';
+import Nav from './Nav';
 import { BeatLoader } from 'react-spinners';
 
-const apiKey = require("../config.js");
+var apiKey = require("../config.js");
+
 
 export default class Gallery extends Component {
 
@@ -15,20 +18,31 @@ export default class Gallery extends Component {
     this.state = {
       apiKeyNotFound:false,
       images:[],
-      query: queryParameter,
-      loading: true
+      query: queryParameter ? queryParameter : "",
+      loading: true,
+      isSearchUrl:match.path.indexOf("/search")>=0
     };
   }
 
   // display if no pictures where found
   renderNotFound(){
     return (
-      <ul>
-        <li className="not-found">
-          <h3>No Results Found</h3>
-          <p>You search did not return any results. Please try again.</p>
-        </li>
-      </ul>
+      (this.state.query !== "")
+      ? (
+          <ul>
+            <li className="not-found">
+              <h3>No Results Found</h3>
+              <p>You search did not return any results. Please try again.</p>
+            </li>
+          </ul>
+        )
+      : (
+        <ul>
+          <li className="not-found">
+            <h3>Search for fabulous pics in Flickr</h3>
+          </li>
+        </ul>
+      )
     );
   }
 
@@ -90,13 +104,14 @@ export default class Gallery extends Component {
       <ul>
         <li className="not-found">
           <h3>API key error</h3>
-          <p>Please check the config file</p>
+          <p>Please check the config file in <b>src</b> folder</p>
         </li>
       </ul>
     )
   }
 
   fetchImages(query){
+
     axios.get('https://api.flickr.com/services/rest/', {
       params: {
         method: "flickr.photos.search",
@@ -126,27 +141,37 @@ export default class Gallery extends Component {
       }
     })
     .catch(error => {
-      // if
       this.setState({apiKeyNotFound:true});
-      console.log('Error fetching and parsing data', error);
     });
 
   }
 
   componentDidMount() {
-    this.fetchImages(this.state.query);
+    if(this.state.query!==""){
+      this.fetchImages(this.state.query);
+    }else{
+      this.setState({
+        loading:false
+      });
+    }
   }
 
   render() {
     return (
-      <div className="photo-container">
+      <div>
         {
-          (this.state.apiKeyNotFound)
-          ? this.renderApiKeyNotFound()
-          : this.renderPhotos()
+          (this.state.isSearchUrl)
+          ? <SearchForm />
+          : <Nav />
         }
+        <div className="photo-container">
+          {
+            (this.state.apiKeyNotFound)
+            ? this.renderApiKeyNotFound()
+            : this.renderPhotos()
+          }
+        </div>
       </div>
     );
   }
-
 }
